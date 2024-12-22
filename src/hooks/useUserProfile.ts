@@ -2,23 +2,24 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User } from '../types/conversations';
 
-export function useUserProfile(userId: string | null) {
+export function useUserProfile() {
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (userId) {
-      fetchProfile();
-    }
-  }, [userId]);
+    fetchProfile();
+  }, []);
 
   async function fetchProfile() {
     try {
       setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name')
-        .eq('id', userId)
+        .eq('id', user.id)
         .single();
 
       if (error) throw error;
@@ -30,5 +31,5 @@ export function useUserProfile(userId: string | null) {
     }
   }
 
-  return { profile, loading };
+  return { profile, loading, refetch: fetchProfile };
 }

@@ -1,15 +1,15 @@
-import { Bell, User } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { careerPlanningModules } from '../data/modules';
+import { useUserProfile } from '../hooks/useUserProfile';
 
 export default function Header() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { courseId, moduleId, lessonId } = useParams();
+  const { profile } = useUserProfile();
 
   const notifications = [
     { id: 1, text: 'New course available: "Advanced Interview Techniques"', time: '5m ago' },
@@ -18,15 +18,6 @@ export default function Header() {
   ];
 
   const getPageTitle = () => {
-    if (location.pathname.includes('/course')) {
-      if (moduleId && lessonId) {
-        const module = careerPlanningModules.find(m => m.id === moduleId);
-        const lesson = module?.lessons.find(l => l.id === lessonId);
-        return lesson ? `${module?.title} - ${lesson.title}` : 'Course Content';
-      }
-      return 'Career Planning Fundamentals';
-    }
-
     switch (location.pathname) {
       case '/dashboard':
         return 'Your Courses';
@@ -44,7 +35,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-gray-900 bg-opacity-50 backdrop-blur-lg border-b border-gray-800 px-6 py-4">
+    <header className="bg-gray-900 bg-opacity-50 backdrop-blur-lg border-b border-gray-800 px-6 py-4 z-20">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-white">{getPageTitle()}</h1>
         <div className="flex items-center space-x-4">
@@ -81,7 +72,9 @@ export default function Header() {
               className="flex items-center space-x-3 hover:bg-gray-800 rounded-lg p-2"
             >
               <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center">
-                <span className="text-white font-medium">A</span>
+                <span className="text-white font-medium">
+                  {profile?.full_name?.[0]?.toUpperCase() || 'A'}
+                </span>
               </div>
             </button>
             {isProfileOpen && (

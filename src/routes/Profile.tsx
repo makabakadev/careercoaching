@@ -1,34 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { ProfileForm } from '../components/profile/ProfileForm';
 import { PasswordForm } from '../components/profile/PasswordForm';
+import { useUserProfile } from '../hooks/useUserProfile';
 
 export default function Profile() {
   const [loading, setLoading] = useState(false);
-  const [fullName, setFullName] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
-
-  useEffect(() => {
-    getProfile();
-  }, []);
-
-  async function getProfile() {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user');
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-      if (data) setFullName(data.full_name);
-    } catch (error) {
-      console.error('Error loading user data!', error);
-    }
-  }
+  const { profile, refetch } = useUserProfile();
 
   async function updateProfile(newName: string) {
     try {
@@ -47,7 +26,7 @@ export default function Profile() {
         .upsert(updates);
 
       if (error) throw error;
-      setFullName(newName);
+      await refetch();
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (error) {
       setMessage({ type: 'error', text: 'Error updating profile!' });
@@ -78,7 +57,7 @@ export default function Profile() {
         <h2 className="text-2xl font-semibold mb-6 text-white">Edit Profile</h2>
         
         <ProfileForm
-          fullName={fullName}
+          fullName={profile?.full_name || ''}
           loading={loading}
           onUpdateName={updateProfile}
           message={message}
